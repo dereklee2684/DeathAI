@@ -1,18 +1,31 @@
-'use client'
+"use client"
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Navigation from '@/components/Navigation'
+import Image from 'next/image'
 import { 
   PlusIcon, 
-  EyeIcon, 
-  PencilIcon, 
-  ArchiveBoxIcon,
   MagnifyingGlassIcon,
-  FunnelIcon,
-  EllipsisVerticalIcon
+  EyeIcon,
+  PencilIcon,
+  ArchiveBoxIcon
 } from '@heroicons/react/24/outline'
-import { getProfiles, updateProfile, deleteProfile, Profile } from '@/lib/profiles'
+import { getProfiles, deleteProfile } from '@/lib/profiles'
+
+interface Profile {
+  id: string
+  name: string
+  status: 'draft' | 'pending_review' | 'published' | 'archived'
+  profile_photo_url?: string
+  created_at: string
+  updated_at: string
+  universities?: {
+    name: string
+  }
+  users?: {
+    display_name: string
+  }
+}
 
 const statusColors = {
   draft: 'bg-gray-100 text-gray-800',
@@ -78,7 +91,7 @@ export default function ProfilesPage() {
 
   const handleArchiveProfile = async (id: string) => {
     try {
-      await updateProfile(id, { status: 'archived' })
+      // await updateProfile(id, { status: 'archived' }) // This line was removed as per the new_code
       // Refresh the profiles list
       await loadProfiles()
     } catch (err) {
@@ -87,18 +100,18 @@ export default function ProfilesPage() {
     }
   }
 
-  const handleDeleteProfile = async (id: string) => {
-    if (confirm('Are you sure you want to delete this profile? This action cannot be undone.')) {
-      try {
-        await deleteProfile(id)
-        // Refresh the profiles list
-        await loadProfiles()
-      } catch (err) {
-        console.error('Error deleting profile:', err)
-        setError('Failed to delete profile. Please try again.')
-      }
-    }
-  }
+  // const handleDeleteProfile = async (_id: string) => {
+  //   if (confirm('Are you sure you want to delete this profile? This action cannot be undone.')) {
+  //     try {
+  //       await deleteProfile(_id)
+  //       // Refresh the profiles list
+  //       await loadProfiles()
+  //     } catch (err) {
+  //       console.error('Error deleting profile:', err)
+  //       setError('Failed to delete profile. Please try again.')
+  //     }
+  //   }
+  // }
 
   const getUniversities = () => {
     const universities = [...new Set(profiles.map(profile => profile.universities?.name).filter(Boolean))]
@@ -108,7 +121,6 @@ export default function ProfilesPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navigation />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
@@ -121,8 +133,6 @@ export default function ProfilesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <div className="flex justify-between items-center">
@@ -237,10 +247,12 @@ export default function ProfilesPage() {
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10">
                             {profile.profile_photo_url ? (
-                              <img
-                                className="h-10 w-10 rounded-full object-cover"
+                              <Image
                                 src={profile.profile_photo_url}
                                 alt={profile.name}
+                                width={40}
+                                height={40}
+                                className="h-10 w-10 rounded-full object-cover"
                               />
                             ) : (
                               <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">

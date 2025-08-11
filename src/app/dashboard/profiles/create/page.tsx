@@ -1,8 +1,7 @@
-'use client'
+"use client"
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Navigation from '@/components/Navigation'
 import { 
   ArrowLeftIcon, 
   ArrowRightIcon, 
@@ -10,11 +9,9 @@ import {
   XMarkIcon,
   PhotoIcon,
   DocumentTextIcon,
-  ClockIcon,
-  UserIcon
+  CalendarIcon
 } from '@heroicons/react/24/outline'
-import { createProfile, uploadProfilePhoto, uploadCoverPhoto, TimelineEvent, Story } from '@/lib/profiles'
-import { useAuth } from '@/contexts/AuthContext'
+import { createProfile, uploadProfilePhoto, uploadCoverPhoto } from '@/lib/profiles'
 
 interface TimelineEventData {
   id: string
@@ -35,12 +32,13 @@ interface StoryData {
 interface ProfileData {
   name: string
   birthDate: string
-  passedDate?: string
   coverPhoto?: File
   profilePhoto?: File
   timeline: TimelineEventData[]
   stories: StoryData[]
 }
+
+const totalSteps = 4
 
 const storyQuestions = [
   "What was your proudest moment?",
@@ -53,60 +51,38 @@ const storyQuestions = [
   "What was your biggest achievement?"
 ]
 
-const STORAGE_KEY = 'profile-creation-draft'
-
 export default function CreateProfilePage() {
   const router = useRouter()
-  const { user } = useAuth()
   const [currentStep, setCurrentStep] = useState(1)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [profileData, setProfileData] = useState<ProfileData>({
     name: '',
     birthDate: '',
-    passedDate: '',
     timeline: [],
     stories: []
   })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const totalSteps = 4
 
   // Load cached data on component mount
   useEffect(() => {
-    const cachedData = localStorage.getItem(STORAGE_KEY)
-    if (cachedData) {
+    const cached = localStorage.getItem('profileCreationData')
+    if (cached) {
       try {
-        const parsed = JSON.parse(cachedData)
-        // Only restore non-file data (files can't be serialized)
-        setProfileData(prev => ({
-          ...prev,
-          name: parsed.name || '',
-          birthDate: parsed.birthDate || '',
-          passedDate: parsed.passedDate || '',
-          timeline: parsed.timeline || [],
-          stories: parsed.stories || []
-        }))
-      } catch (error) {
-        console.error('Error loading cached data:', error)
-        localStorage.removeItem(STORAGE_KEY)
+        const parsed = JSON.parse(cached)
+        setProfileData(parsed)
+      } catch (err) {
+        console.error('Error loading cached data:', err)
       }
     }
   }, [])
 
-  // Auto-save to localStorage whenever data changes
+  // Auto-save to localStorage
   useEffect(() => {
-    const dataToCache = {
-      name: profileData.name,
-      birthDate: profileData.birthDate,
-      passedDate: profileData.passedDate,
-      timeline: profileData.timeline,
-      stories: profileData.stories
-    }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToCache))
+    localStorage.setItem('profileCreationData', JSON.stringify(profileData))
   }, [profileData])
 
   const clearCache = () => {
-    localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem('profileCreationData')
   }
 
   const handleNext = () => {
@@ -156,7 +132,7 @@ export default function CreateProfilePage() {
   const addStory = () => {
     const newStory: StoryData = {
       id: Date.now().toString(),
-      question: 'Tell us a story...',
+              question: 'Tell us a story...',
       answer: ''
     }
     setProfileData(prev => ({
@@ -189,18 +165,13 @@ export default function CreateProfilePage() {
   }
 
   const handleSubmit = async () => {
-    if (!user) {
-      setError('You must be logged in to create a profile.')
-      return
-    }
-
     if (!profileData.name.trim()) {
       setError('Profile name is required.')
       return
     }
 
-    setIsSubmitting(true)
-    setError(null)
+    setLoading(true)
+    setError('')
 
     try {
       // Prepare timeline events for database
@@ -243,7 +214,7 @@ export default function CreateProfilePage() {
       console.error('Error creating profile:', err)
       setError('Failed to create profile. Please try again.')
     } finally {
-      setIsSubmitting(false)
+      setLoading(false)
     }
   }
 
@@ -385,7 +356,7 @@ export default function CreateProfilePage() {
           <div key={event.id} className="bg-gray-50 rounded-lg p-4">
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center space-x-2">
-                <ClockIcon className="h-5 w-5 text-gray-400" />
+                <CalendarIcon className="h-5 w-5 text-gray-400" />
                 <span className="text-sm font-medium text-gray-700">Event {index + 1}</span>
               </div>
               <button
@@ -401,7 +372,7 @@ export default function CreateProfilePage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                 <select
                   value={event.type}
-                  onChange={(e) => updateTimelineEvent(event.id, 'type', e.target.value as any)}
+                  onChange={(e) => updateTimelineEvent(event.id, 'type', e.target.value as 'education' | 'job' | 'event')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-black"
                 >
                   <option value="education">Education</option>
@@ -470,9 +441,9 @@ export default function CreateProfilePage() {
         
         {profileData.timeline.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            <ClockIcon className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+            <CalendarIcon className="mx-auto h-12 w-12 text-gray-300 mb-4" />
             <p>No timeline events added yet.</p>
-            <p className="text-sm">Click "Add Event" to get started.</p>
+            <p className="text-sm">Click &quot;Add Event&quot; to get started.</p>
           </div>
         )}
       </div>
@@ -610,10 +581,16 @@ export default function CreateProfilePage() {
               <span className="text-sm text-gray-500">Birth Date</span>
               <p className="text-gray-900">{profileData.birthDate || 'Not provided'}</p>
             </div>
-            {profileData.passedDate && (
+            {profileData.coverPhoto && (
               <div>
-                <span className="text-sm text-gray-500">Passed Date</span>
-                <p className="text-gray-900">{profileData.passedDate}</p>
+                <span className="text-sm text-gray-500">Cover Photo</span>
+                <p className="text-gray-900">Uploaded</p>
+              </div>
+            )}
+            {profileData.profilePhoto && (
+              <div>
+                <span className="text-sm text-gray-500">Profile Photo</span>
+                <p className="text-gray-900">Uploaded</p>
               </div>
             )}
           </div>
@@ -679,8 +656,6 @@ export default function CreateProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <button
@@ -708,7 +683,7 @@ export default function CreateProfilePage() {
           <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
             {error}
             <button
-              onClick={() => setError(null)}
+              onClick={() => setError('')}
               className="float-right font-bold"
             >
               ×
@@ -744,10 +719,10 @@ export default function CreateProfilePage() {
             ) : (
               <button
                 onClick={handleSubmit}
-                disabled={isSubmitting}
+                disabled={loading}
                 className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Creating Profile...' : 'Submit for Review'}
+                {loading ? 'Creating Profile...' : 'Submit for Review'}
               </button>
             )}
           </div>

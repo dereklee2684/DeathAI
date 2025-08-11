@@ -315,25 +315,21 @@ export async function deleteStory(id: string) {
 export async function uploadProfilePhoto(file: File, profileId: string) {
   const fileExt = file.name.split('.').pop()
   const fileName = `${profileId}-profile-${Date.now()}.${fileExt}`
-
-  const { data, error } = await supabase.storage
+  
+  const { error } = await supabase.storage
     .from(PROFILE_BUCKET)
     .upload(fileName, file)
 
   if (error) {
-    const friendly = error.message?.includes('Bucket not found')
-      ? `Storage bucket "${PROFILE_BUCKET}" not found. Create it in Supabase Storage or set NEXT_PUBLIC_SUPABASE_PROFILE_BUCKET.`
-      : error.message
-    console.error('Error uploading profile photo:', friendly)
+    console.error('Error uploading profile photo:', error)
     throw error
   }
 
-  const { data: publicUrlData } = supabase.storage
+  const { data: { publicUrl } } = supabase.storage
     .from(PROFILE_BUCKET)
     .getPublicUrl(fileName)
 
-  const publicUrl = publicUrlData.publicUrl
-
+  // Update profile with photo URL
   await updateProfile(profileId, { profile_photo_url: publicUrl })
 
   return publicUrl
@@ -342,25 +338,21 @@ export async function uploadProfilePhoto(file: File, profileId: string) {
 export async function uploadCoverPhoto(file: File, profileId: string) {
   const fileExt = file.name.split('.').pop()
   const fileName = `${profileId}-cover-${Date.now()}.${fileExt}`
-
-  const { data, error } = await supabase.storage
+  
+  const { error } = await supabase.storage
     .from(COVER_BUCKET)
     .upload(fileName, file)
 
   if (error) {
-    const friendly = error.message?.includes('Bucket not found')
-      ? `Storage bucket "${COVER_BUCKET}" not found. Create it in Supabase Storage or set NEXT_PUBLIC_SUPABASE_COVER_BUCKET.`
-      : error.message
-    console.error('Error uploading cover photo:', friendly)
+    console.error('Error uploading cover photo:', error)
     throw error
   }
 
-  const { data: publicUrlData } = supabase.storage
+  const { data: { publicUrl } } = supabase.storage
     .from(COVER_BUCKET)
     .getPublicUrl(fileName)
 
-  const publicUrl = publicUrlData.publicUrl
-
+  // Update profile with cover photo URL
   await updateProfile(profileId, { cover_photo_url: publicUrl })
 
   return publicUrl

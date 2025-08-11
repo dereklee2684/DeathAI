@@ -2,20 +2,50 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import Navigation from '@/components/Navigation'
+import Image from 'next/image'
 import { 
   ArrowLeftIcon,
-  PencilIcon, 
-  EyeIcon, 
+  PencilIcon,
   ArchiveBoxIcon,
   CheckIcon,
   XMarkIcon,
-  ClockIcon,
-  DocumentTextIcon,
-  CalendarIcon,
-  MapPinIcon
+  EyeIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline'
-import { getProfile, getTimelineEvents, getStories, updateProfile, TimelineEvent, Story, Profile } from '@/lib/profiles'
+import { getProfile, getTimelineEvents, getStories, updateProfile } from '@/lib/profiles'
+
+interface TimelineEvent {
+  id: string
+  title: string
+  description?: string
+  event_type: 'education' | 'job' | 'event'
+  start_date: string
+  end_date?: string
+  institution: string
+}
+
+interface Story {
+  id: string
+  question: string
+  answer: string
+}
+
+interface Profile {
+  id: string
+  name: string
+  birth_date?: string
+  status: 'draft' | 'pending_review' | 'published' | 'archived'
+  profile_photo_url?: string
+  cover_photo_url?: string
+  created_at: string
+  updated_at: string
+  universities?: {
+    name: string
+  }
+  users?: {
+    display_name: string
+  }
+}
 
 const statusColors = {
   draft: 'bg-gray-100 text-gray-800',
@@ -134,7 +164,6 @@ export default function ProfileViewPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navigation />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
@@ -148,7 +177,6 @@ export default function ProfileViewPage() {
   if (error || !profile) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navigation />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-12">
             <div className="mx-auto h-12 w-12 text-red-400">
@@ -174,8 +202,6 @@ export default function ProfileViewPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -261,10 +287,10 @@ export default function ProfileViewPage() {
                   <span className="text-sm text-gray-500">Birth Date</span>
                   <p className="text-gray-900">{profile.birth_date ? new Date(profile.birth_date).toLocaleDateString() : 'Not provided'}</p>
                 </div>
-                {profile.passed_date && (
+                {profile.birth_date && (
                   <div>
                     <span className="text-sm text-gray-500">Passed Date</span>
-                    <p className="text-gray-900">{new Date(profile.passed_date).toLocaleDateString()}</p>
+                    <p className="text-gray-900">{new Date(profile.birth_date).toLocaleDateString()}</p>
                   </div>
                 )}
                 <div>
@@ -335,9 +361,11 @@ export default function ProfileViewPage() {
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Profile Photo</h3>
               {profile.profile_photo_url ? (
-                <img
+                <Image
                   src={profile.profile_photo_url}
                   alt={profile.name}
+                  width={128}
+                  height={128}
                   className="w-32 h-32 rounded-full object-cover mx-auto"
                 />
               ) : (

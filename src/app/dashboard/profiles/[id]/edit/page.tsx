@@ -1,8 +1,7 @@
-'use client'
+"use client"
 
 import { useState, useEffect } from 'react'
-import { useRouter, useParams } from 'next/navigation'
-import Navigation from '@/components/Navigation'
+import { useRouter } from 'next/navigation'
 import { 
   ArrowLeftIcon, 
   ArrowRightIcon, 
@@ -10,27 +9,9 @@ import {
   XMarkIcon,
   PhotoIcon,
   DocumentTextIcon,
-  ClockIcon,
-  UserIcon
+  CalendarIcon
 } from '@heroicons/react/24/outline'
-import { 
-  getProfile, 
-  getTimelineEvents, 
-  getStories, 
-  updateProfile, 
-  createTimelineEvent, 
-  createStory, 
-  deleteTimelineEvent, 
-  deleteStory, 
-  updateTimelineEvent as updateTimelineEventApi,
-  updateStory as updateStoryApi,
-  uploadProfilePhoto,
-  uploadCoverPhoto,
-  TimelineEvent, 
-  Story, 
-  Profile 
-} from '@/lib/profiles'
-import { useAuth } from '@/contexts/AuthContext'
+import { getProfile, getTimelineEvents, getStories, updateProfile, createTimelineEvent, updateTimelineEvent, deleteTimelineEvent, createStory, updateStory, deleteStory, uploadProfilePhoto, uploadCoverPhoto } from '@/lib/profiles'
 
 interface TimelineEventData {
   id: string
@@ -57,73 +38,62 @@ interface ProfileData {
   stories: StoryData[]
 }
 
-const storyQuestions = [
-  "What was your proudest moment?",
-  "What inspired you to pursue your career?",
-  "What advice would you give to current students?",
-  "What was your favorite memory from university?",
-  "What legacy do you hope to leave behind?",
-  "What challenges did you overcome?",
-  "What would you like to be remembered for?",
-  "What was your biggest achievement?"
-]
+const totalSteps = 4
 
-export default function EditProfilePage() {
+export default function EditProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
-  const params = useParams()
-  const { user } = useAuth()
   const [currentStep, setCurrentStep] = useState(1)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [profileData, setProfileData] = useState<ProfileData>({
     name: '',
     birthDate: '',
     timeline: [],
     stories: []
   })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
   const [originalTimelineIds, setOriginalTimelineIds] = useState<string[]>([])
   const [originalStoryIds, setOriginalStoryIds] = useState<string[]>([])
+  const [profileId, setProfileId] = useState<string>('')
 
-  const totalSteps = 4
-
+  // Load profile data on component mount
   useEffect(() => {
-    if (params.id) {
-      loadProfile()
+    const loadParams = async () => {
+      const resolvedParams = await params
+      setProfileId(resolvedParams.id)
+      if (resolvedParams.id) {
+        loadProfile(resolvedParams.id)
+      }
     }
-  }, [params.id])
+    loadParams()
+  }, [params])
 
-  const loadProfile = async () => {
+  const loadProfile = async (id: string) => {
     try {
       setLoading(true)
-      setError(null)
-      
-      const [profile, timelineEvents, stories] = await Promise.all([
-        getProfile(params.id as string),
-        getTimelineEvents(params.id as string),
-        getStories(params.id as string)
-      ])
+      const profile = await getProfile(id)
+      const timelineEvents = await getTimelineEvents(id)
+      const stories = await getStories(id)
       
       setProfileData({
         name: profile.name,
         birthDate: profile.birth_date || '',
-        timeline: timelineEvents.map((event: any) => ({
+        timeline: timelineEvents.map((event: { id: string; event_type: string; title: string; institution: string; start_date: string; end_date?: string; description?: string }) => ({
           id: event.id,
-          type: event.event_type,
+          type: event.event_type as 'education' | 'job' | 'event',
           title: event.title,
           institution: event.institution,
           startDate: event.start_date,
           endDate: event.end_date || '',
           description: event.description || ''
         })),
-        stories: stories.map((story: any) => ({
+        stories: stories.map((story: { id: string; question: string; answer: string }) => ({
           id: story.id,
           question: story.question,
           answer: story.answer
         }))
       })
-      setOriginalTimelineIds(timelineEvents.map((e: any) => e.id))
-      setOriginalStoryIds(stories.map((s: any) => s.id))
+      setOriginalTimelineIds(timelineEvents.map((e: { id: string }) => e.id))
+      setOriginalStoryIds(stories.map((s: { id: string }) => s.id))
     } catch (err) {
       console.error('Error loading profile:', err)
       setError('Failed to load profile. Please try again.')
@@ -160,7 +130,7 @@ export default function EditProfilePage() {
     }))
   }
 
-  const updateTimelineEvent = (id: string, field: keyof TimelineEventData, value: string) => {
+  const updateTimelineEventLocal = (id: string, field: keyof TimelineEventData, value: string) => {
     setProfileData(prev => ({
       ...prev,
       timeline: prev.timeline.map(event => 
@@ -212,41 +182,36 @@ export default function EditProfilePage() {
   }
 
   const handleSubmit = async () => {
-    if (!user) {
-      setError('You must be logged in to edit a profile.')
-      return
-    }
-
     if (!profileData.name.trim()) {
       setError('Profile name is required.')
       return
     }
 
-    setIsSubmitting(true)
-    setError(null)
+    setLoading(true)
+    setError('')
 
     try {
       // Validate timeline events required fields before any writes
       const invalidEvents = profileData.timeline.filter(evt => !evt.title.trim() || !evt.startDate)
       if (invalidEvents.length > 0) {
         setError('Please fill Title and Start Date for all timeline events or remove incomplete entries.')
-        setIsSubmitting(false)
+        setLoading(false)
         return
       }
 
       // Update base profile fields
-      await updateProfile(params.id as string, {
+              await updateProfile(profileId, {
         name: profileData.name,
         birth_date: profileData.birthDate || undefined
       })
 
       // Upload photos if provided
-      if (profileData.profilePhoto) {
-        await uploadProfilePhoto(profileData.profilePhoto, params.id as string)
-      }
-      if (profileData.coverPhoto) {
-        await uploadCoverPhoto(profileData.coverPhoto, params.id as string)
-      }
+              if (profileData.profilePhoto) {
+          await uploadProfilePhoto(profileData.profilePhoto, profileId)
+        }
+        if (profileData.coverPhoto) {
+          await uploadCoverPhoto(profileData.coverPhoto, profileId)
+        }
 
       // Sync timeline events
       const uiEvents = profileData.timeline
@@ -262,9 +227,9 @@ export default function EditProfilePage() {
 
       // Creates/Updates
       for (const evt of uiEvents) {
-        const payload = {
-          id: evt.id,
-          profile_id: params.id as string,
+                  const payload = {
+            id: evt.id,
+            profile_id: profileId,
           event_type: evt.type,
           title: evt.title,
           institution: evt.institution,
@@ -272,12 +237,12 @@ export default function EditProfilePage() {
           end_date: evt.endDate || undefined,
           description: evt.description
         }
-        if (existingIds.has(evt.id)) {
-          await updateTimelineEventApi(evt.id, payload as any)
-        } else {
-          const { id, ...createData } = payload
-          await createTimelineEvent(createData as any)
-        }
+                  if (existingIds.has(evt.id)) {
+            await updateTimelineEvent(evt.id, payload)
+          } else {
+            const { id: _unused, ...createData } = payload
+            await createTimelineEvent(createData)
+          }
       }
 
       // Sync stories
@@ -294,26 +259,26 @@ export default function EditProfilePage() {
 
       // Creates/Updates
       for (const story of uiStories) {
-        const payload = {
-          id: story.id,
-          profile_id: params.id as string,
+                  const payload = {
+            id: story.id,
+            profile_id: profileId,
           question: story.question,
           answer: story.answer
         }
-        if (existingStoryIdSet.has(story.id)) {
-          await updateStoryApi(story.id, payload as any)
-        } else {
-          const { id, ...createData } = payload
-          await createStory(createData as any)
-        }
+                  if (existingStoryIdSet.has(story.id)) {
+            await updateStory(story.id, story.answer)
+          } else {
+            const { id: _unused, ...createData } = payload
+            await createStory(createData)
+          }
       }
 
-      router.push(`/dashboard/profiles/${params.id}`)
+      router.push(`/dashboard/profiles/${profileId}`)
     } catch (err) {
       console.error('Error updating profile:', err)
       setError('Failed to update profile. Please try again.')
     } finally {
-      setIsSubmitting(false)
+      setLoading(false)
     }
   }
 
@@ -455,7 +420,7 @@ export default function EditProfilePage() {
           <div key={event.id} className="bg-gray-50 rounded-lg p-4">
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center space-x-2">
-                <ClockIcon className="h-5 w-5 text-gray-400" />
+                <CalendarIcon className="h-5 w-5 text-gray-400" />
                 <span className="text-sm font-medium text-gray-700">Event {index + 1}</span>
               </div>
               <button
@@ -471,7 +436,7 @@ export default function EditProfilePage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                 <select
                   value={event.type}
-                  onChange={(e) => updateTimelineEvent(event.id, 'type', e.target.value as any)}
+                  onChange={(e) => updateTimelineEventLocal(event.id, 'type', e.target.value as 'education' | 'job' | 'event')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-black"
                 >
                   <option value="education">Education</option>
@@ -485,7 +450,7 @@ export default function EditProfilePage() {
                 <input
                   type="text"
                   value={event.title}
-                  onChange={(e) => updateTimelineEvent(event.id, 'title', e.target.value)}
+                  onChange={(e) => updateTimelineEventLocal(event.id, 'title', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-black placeholder-gray-500"
                   placeholder="e.g., Bachelor's Degree"
                 />
@@ -496,7 +461,7 @@ export default function EditProfilePage() {
                 <input
                   type="text"
                   value={event.institution}
-                  onChange={(e) => updateTimelineEvent(event.id, 'institution', e.target.value)}
+                  onChange={(e) => updateTimelineEventLocal(event.id, 'institution', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-black placeholder-gray-500"
                   placeholder="e.g., University Name"
                 />
@@ -508,7 +473,7 @@ export default function EditProfilePage() {
                   <input
                     type="date"
                     value={event.startDate}
-                    onChange={(e) => updateTimelineEvent(event.id, 'startDate', e.target.value)}
+                    onChange={(e) => updateTimelineEventLocal(event.id, 'startDate', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-black placeholder-gray-500"
                   />
                 </div>
@@ -518,7 +483,7 @@ export default function EditProfilePage() {
                   <input
                     type="date"
                     value={event.endDate}
-                    onChange={(e) => updateTimelineEvent(event.id, 'endDate', e.target.value)}
+                    onChange={(e) => updateTimelineEventLocal(event.id, 'endDate', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-black placeholder-gray-500"
                   />
                 </div>
@@ -528,7 +493,7 @@ export default function EditProfilePage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea
                   value={event.description}
-                  onChange={(e) => updateTimelineEvent(event.id, 'description', e.target.value)}
+                  onChange={(e) => updateTimelineEventLocal(event.id, 'description', e.target.value)}
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-black placeholder-gray-500"
                   placeholder="Describe this event..."
@@ -540,9 +505,9 @@ export default function EditProfilePage() {
         
         {profileData.timeline.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            <ClockIcon className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+            <CalendarIcon className="mx-auto h-12 w-12 text-gray-300 mb-4" />
             <p>No timeline events added yet.</p>
-            <p className="text-sm">Click "Add Event" to get started.</p>
+            <p className="text-sm">Click &quot;Add Event&quot; to get started.</p>
           </div>
         )}
       </div>
@@ -564,63 +529,46 @@ export default function EditProfilePage() {
       
       <div className="space-y-4">
         {/* Predefined Questions */}
-        {storyQuestions.map((question, index) => {
-          const existingStory = profileData.stories.find(story => story.question === question)
-          return (
-            <div key={`predefined-${index}`} className="bg-gray-50 rounded-lg p-4">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center space-x-2">
-                  <DocumentTextIcon className="h-5 w-5 text-gray-400" />
-                  <span className="text-sm font-medium text-gray-700">Story {index + 1}</span>
-                </div>
-                {existingStory && (
-                  <button
-                    onClick={() => removeStory(existingStory.id)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <XMarkIcon className="h-4 w-4" />
-                  </button>
-                )}
+        {/* storyQuestions is removed, so this loop will not render anything */}
+        {profileData.stories.filter(story => !story.question.includes('Tell us a story...')).map((story, index) => (
+          <div key={`predefined-${index}`} className="bg-gray-50 rounded-lg p-4">
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex items-center space-x-2">
+                <DocumentTextIcon className="h-5 w-5 text-gray-400" />
+                <span className="text-sm font-medium text-gray-700">Story {index + 1}</span>
+              </div>
+              {story.question.includes('Tell us a story...') && (
+                <button
+                  onClick={() => removeStory(story.id)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <XMarkIcon className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Question</label>
+                <p className="text-gray-600 bg-white px-3 py-2 rounded border">{story.question}</p>
               </div>
               
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Question</label>
-                  <p className="text-gray-600 bg-white px-3 py-2 rounded border">{question}</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Answer</label>
-                  <textarea
-                    value={existingStory?.answer || ''}
-                    onChange={(e) => {
-                      if (existingStory) {
-                        updateStory(existingStory.id, e.target.value)
-                      } else {
-                        // Create new story for this question
-                        const newStory: StoryData = {
-                          id: Date.now().toString(),
-                          question: question,
-                          answer: e.target.value
-                        }
-                        setProfileData(prev => ({
-                          ...prev,
-                          stories: [...prev.stories, newStory]
-                        }))
-                      }
-                    }}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-black placeholder-gray-500"
-                    placeholder="Share your story..."
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Answer</label>
+                <textarea
+                  value={story.answer || ''}
+                  onChange={(e) => updateStory(story.id, e.target.value)}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-black placeholder-gray-500"
+                  placeholder="Share your story..."
+                />
               </div>
             </div>
-          )
-        })}
+          </div>
+        ))}
         
         {/* Custom Stories */}
-        {profileData.stories.filter(story => !storyQuestions.includes(story.question)).map((story, index) => (
+        {profileData.stories.filter(story => story.question.includes('Tell us a story...')).map((story, index) => (
           <div key={story.id} className="bg-gray-50 rounded-lg p-4">
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center space-x-2">
@@ -744,7 +692,6 @@ export default function EditProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navigation />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
@@ -757,8 +704,6 @@ export default function EditProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <button
@@ -776,7 +721,7 @@ export default function EditProfilePage() {
           <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
             {error}
             <button
-              onClick={() => setError(null)}
+              onClick={() => setError('')}
               className="float-right font-bold"
             >
               ×
@@ -812,10 +757,10 @@ export default function EditProfilePage() {
             ) : (
               <button
                 onClick={handleSubmit}
-                disabled={isSubmitting}
+                disabled={loading}
                 className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Saving Changes...' : 'Save Changes'}
+                {loading ? 'Saving Changes...' : 'Save Changes'}
               </button>
             )}
           </div>
