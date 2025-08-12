@@ -1,4 +1,18 @@
+# Storiats - Alumni Profile Management Platform
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## About Storiats
+
+Storiats is a comprehensive alumni profile management platform that allows universities to manage and showcase their alumni profiles. The platform features role-based access control, profile management, analytics, and a modern responsive interface.
+
+### Features
+- **Role-based Access Control**: Platform Admin, University Admin, Alumni, and Viewer roles
+- **Profile Management**: Create, edit, and manage alumni profiles
+- **Analytics Dashboard**: View platform statistics and insights
+- **Modern UI**: Responsive design with Tailwind CSS
+- **Authentication**: Secure authentication with Supabase
+- **TypeScript**: Full type safety throughout the application
 
 ## Getting Started
 
