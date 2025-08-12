@@ -3,28 +3,66 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { User, AuthError, Session } from '@supabase/supabase-js'
+import { UserRole } from '@/types'
+
+interface ExtendedUser extends User {
+  user_role?: UserRole
+  display_name?: string
+}
 
 interface AuthContextType {
-  user: User | null
+  user: ExtendedUser | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
-  signUp: (email: string, password: string, displayName: string) => Promise<{ error: AuthError | null }>
+  signUp: (email: string, password: string, displayName: string, userRole: UserRole) => Promise<{ error: AuthError | null }>
   signOut: () => Promise<void>
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<ExtendedUser | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
+  const updateUserWithBasicInfo = (authUser: User | null) => {
+    if (!authUser) {
+      setUser(null)
+      setLoading(false)
+      return
+    }
+
+    // Set basic user info immediately without database calls
+    const displayName = authUser.user_metadata?.display_name || authUser.email
+    const userRole = authUser.user_metadata?.user_role || 'university_admin' // Default to university_admin
+
+    const extendedUser: ExtendedUser = {
+      ...authUser,
+      user_role: userRole as UserRole,
+      display_name: displayName
+    }
+
+    setUser(extendedUser)
+    setLoading(false)
+  }
+
   useEffect(() => {
+    let mounted = true
+
     // Get initial session
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
-      setLoading(false)
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (mounted) {
+          updateUserWithBasicInfo(session?.user ?? null)
+        }
+      } catch (error) {
+        console.error('Error getting initial session:', error)
+        if (mounted) {
+          setLoading(false)
+        }
+      }
     }
 
     getSession()
@@ -32,37 +70,84 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: string, session: Session | null) => {
-        setUser(session?.user ?? null)
-        setLoading(false)
+        if (mounted) {
+          console.log('Auth state change:', event, session?.user?.email)
+          updateUserWithBasicInfo(session?.user ?? null)
+        }
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [supabase.auth])
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    return { error }
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      return { error }
+    } catch (error) {
+      console.error('Sign in error:', error)
+      return { error: error as AuthError }
+    }
   }
 
-  const signUp = async (email: string, password: string, displayName: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          display_name: displayName,
+  const signUp = async (email: string, password: string, displayName: string, userRole: UserRole) => {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            display_name: displayName,
+            user_role: userRole,
+          },
         },
-      },
-    })
-    return { error }
+      })
+      return { error }
+    } catch (error) {
+      console.error('Sign up error:', error)
+      return { error: error as AuthError }
+    }
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    try {
+      // Clear user state immediately
+      setUser(null)
+      setLoading(false)
+      
+      // Call Supabase signOut
+      const { error } = await supabase.auth.signOut()
+      
+      if (error) {
+        console.error('Error signing out:', error)
+        throw error
+      }
+      
+      // Force a page reload to clear any cached state
+      window.location.href = '/'
+    } catch (error) {
+      console.error('Error in signOut:', error)
+      // Even if there's an error, clear the local state
+      setUser(null)
+      setLoading(false)
+      throw error
+    }
+  }
+
+  const refreshUser = async () => {
+    // For now, just refresh the session
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      updateUserWithBasicInfo(session?.user ?? null)
+    } catch (error) {
+      console.error('Error refreshing user:', error)
+    }
   }
 
   const value = {
@@ -71,6 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signUp,
     signOut,
+    refreshUser,
   }
 
   return (

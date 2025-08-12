@@ -4,12 +4,14 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import Logo from '@/components/Logo'
-import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
+import { EyeIcon, EyeSlashIcon, AcademicCapIcon, UserGroupIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline'
+import { UserRole } from '@/types'
 
 export default function SignUpPage() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [userRole, setUserRole] = useState<UserRole>('viewer')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -21,7 +23,7 @@ export default function SignUpPage() {
     setLoading(true)
     setError('')
 
-    const { error } = await signUp(email, password, fullName)
+    const { error } = await signUp(email, password, fullName, userRole)
     
     if (error) {
       setError(error.message)
@@ -114,6 +116,52 @@ export default function SignUpPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm text-gray-900"
                 />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                I am a...
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setUserRole('viewer')}
+                  className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all duration-200 ${
+                    userRole === 'viewer'
+                      ? 'border-purple-500 bg-purple-50 text-purple-700'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <AcademicCapIcon className="h-8 w-8 mb-2" />
+                  <span className="text-sm font-medium">Student</span>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setUserRole('alumni')}
+                  className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all duration-200 ${
+                    userRole === 'alumni'
+                      ? 'border-purple-500 bg-purple-50 text-purple-700'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <UserGroupIcon className="h-8 w-8 mb-2" />
+                  <span className="text-sm font-medium">Alumni</span>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setUserRole('university_admin')}
+                  className={`flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all duration-200 ${
+                    userRole === 'university_admin'
+                      ? 'border-purple-500 bg-purple-50 text-purple-700'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <BuildingOfficeIcon className="h-8 w-8 mb-2" />
+                  <span className="text-sm font-medium">University Admin</span>
+                </button>
               </div>
             </div>
 

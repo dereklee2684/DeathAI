@@ -1,4 +1,4 @@
-export type UserRole = 'platform_admin' | 'university_admin' | 'editor' | 'contributor' | 'viewer'
+export type UserRole = 'platform_admin' | 'university_admin' | 'editor' | 'contributor' | 'viewer' | 'alumni'
 export type ProfileStatus = 'draft' | 'pending_review' | 'published' | 'archived'
 export type EventType = 'education' | 'job' | 'event'
 export type CommentStatus = 'pending' | 'approved' | 'rejected'
@@ -7,6 +7,7 @@ export interface User {
   id: string
   email: string
   display_name?: string
+  user_role?: UserRole
   created_at: string
   updated_at: string
 }

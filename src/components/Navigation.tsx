@@ -2,13 +2,16 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Logo from './Logo'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
 
 export default function Navigation() {
   const { user, signOut } = useAuth()
+  const router = useRouter()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isSigningOut, setIsSigningOut] = useState(false)
 
   const getInitials = (name: string) => {
     return name.split(' ').map(word => word[0]).join('').toUpperCase()
@@ -16,11 +19,27 @@ export default function Navigation() {
 
   const getDisplayName = () => {
     if (!user) return ''
-    return user.user_metadata?.display_name || user.email || 'User'
+    return user.display_name || user.user_metadata?.display_name || user.email || 'User'
   }
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen)
+  }
+
+  const handleSignOut = async () => {
+    try {
+      setIsSigningOut(true)
+      await signOut()
+      setIsDropdownOpen(false)
+      // Redirect to home page after successful sign out
+      router.push('/')
+    } catch (error) {
+      console.error('Error signing out:', error)
+      // You could show a toast notification here
+      alert('Error signing out. Please try again.')
+    } finally {
+      setIsSigningOut(false)
+    }
   }
 
   return (
@@ -47,9 +66,11 @@ export default function Navigation() {
               <Link href="/contact" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                 Contact
               </Link>
-              <Link href="/dashboard" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                Dashboard
-              </Link>
+              {user && (
+                <Link href="/dashboard" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                  Dashboard
+                </Link>
+              )}
             </div>
           </div>
 
@@ -71,17 +92,26 @@ export default function Navigation() {
                 
                 {isDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-                    <Link href="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    <Link 
+                      href="/dashboard" 
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsDropdownOpen(false)}
+                    >
                       Dashboard
                     </Link>
-                    <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    <Link 
+                      href="/profile" 
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsDropdownOpen(false)}
+                    >
                       Profile
                     </Link>
                     <button
-                      onClick={() => signOut()}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={handleSignOut}
+                      disabled={isSigningOut}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Sign Out
+                      {isSigningOut ? 'Signing Out...' : 'Sign Out'}
                     </button>
                   </div>
                 )}
