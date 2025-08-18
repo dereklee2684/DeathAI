@@ -113,7 +113,7 @@ export default function ProfilesPage() {
     router.push(`/dashboard/profiles/${id}/edit`)
   }
 
-  const handleArchiveProfile = async () => {
+  const handleArchiveProfile = async (id: string) => {
     try {
       // await updateProfile(id, { status: 'archived' }) // This line was removed as per the new_code
       // Refresh the profiles list
@@ -285,7 +285,7 @@ export default function ProfilesPage() {
                         View
                       </button>
                       
-                      {canEditProfile({ ...user, email: user?.email || '', id: user?.id || '' }, profile.created_by) && (
+                      {canEditProfile(user, profile.created_by) && (
                         <button
                           onClick={() => handleEditProfile(profile.id)}
                           className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
@@ -295,7 +295,7 @@ export default function ProfilesPage() {
                         </button>
                       )}
                       
-                      {(isPlatformAdmin({ ...user, email: user?.email || '', id: user?.id || '' }) || isUniversityAdmin({ ...user, email: user?.email || '', id: user?.id || '' })) && (
+                      {(isPlatformAdmin(user) || isUniversityAdmin(user)) && (
                         <button
                           onClick={() => handleArchiveProfile(profile.id)}
                           className="inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
@@ -324,7 +324,7 @@ export default function ProfilesPage() {
                   : 'Get started by creating a new profile.'
                 }
               </p>
-              {canCreateProfiles({ ...user, email: user?.email || '', id: user?.id || '' }) && (
+              {canCreateProfiles(user) && (
                 <div className="mt-6">
                   <button
                     onClick={handleCreateProfile}
