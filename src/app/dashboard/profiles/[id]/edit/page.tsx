@@ -12,6 +12,9 @@ import {
   CalendarIcon
 } from '@heroicons/react/24/outline'
 import { getProfile, getTimelineEvents, getStories, updateProfile, createTimelineEvent, updateTimelineEvent, deleteTimelineEvent, createStory, updateStory, deleteStory, uploadProfilePhoto, uploadCoverPhoto } from '@/lib/profiles'
+import ProtectedRoute from '@/components/ProtectedRoute'
+import { useAuth } from '@/contexts/AuthContext'
+import { canEditProfile } from '@/lib/auth'
 
 interface TimelineEventData {
   id: string
@@ -42,6 +45,7 @@ const totalSteps = 4
 
 export default function EditProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
+  const { user } = useAuth()
   const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -54,6 +58,7 @@ export default function EditProfilePage({ params }: { params: Promise<{ id: stri
   const [originalTimelineIds, setOriginalTimelineIds] = useState<string[]>([])
   const [originalStoryIds, setOriginalStoryIds] = useState<string[]>([])
   const [profileId, setProfileId] = useState<string>('')
+  const [profileCreatedBy, setProfileCreatedBy] = useState<string>('')
 
   // Load profile data on component mount
   useEffect(() => {
@@ -73,6 +78,9 @@ export default function EditProfilePage({ params }: { params: Promise<{ id: stri
       const profile = await getProfile(id)
       const timelineEvents = await getTimelineEvents(id)
       const stories = await getStories(id)
+      
+      // Store the profile creator for permission checking
+      setProfileCreatedBy(profile.created_by)
       
       setProfileData({
         name: profile.name,
@@ -702,70 +710,81 @@ export default function EditProfilePage({ params }: { params: Promise<{ id: stri
     )
   }
 
+  // Check if user has permission to edit this profile
+  const canEdit = canEditProfile(user, profileCreatedBy) && user?.user_role !== 'viewer'
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <button
-            onClick={() => router.back()}
-            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4"
-          >
-            <ArrowLeftIcon className="h-4 w-4 mr-1" />
-            Back to Profile
-          </button>
-          <h1 className="text-3xl font-bold text-gray-900">Edit Alumni Profile</h1>
-          <p className="text-gray-600 mt-2">Update the profile information and content</p>
-        </div>
-
-        {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
-            {error}
+    <ProtectedRoute requireDashboardAccess>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-6">
             <button
-              onClick={() => setError('')}
-              className="float-right font-bold"
+              onClick={() => router.back()}
+              className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4"
             >
-              ×
+              <ArrowLeftIcon className="h-4 w-4 mr-1" />
+              Back to Profile
             </button>
+            <h1 className="text-3xl font-bold text-gray-900">Edit Alumni Profile</h1>
+            <p className="text-gray-600 mt-2">Update the profile information and content</p>
           </div>
-        )}
 
-        {renderStepIndicator()}
+          {!canEdit && (
+            <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
+                              You don&apos;t have permission to edit this profile. Only platform admins, university admins, and the profile creator can edit profiles.
+            </div>
+          )}
 
-        <div className="bg-white rounded-lg shadow-sm border p-8">
-          {renderCurrentStep()}
-        </div>
-
-        <div className="flex justify-between mt-8">
-          <button
-            onClick={handlePrevious}
-            disabled={currentStep === 1}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ArrowLeftIcon className="h-4 w-4 mr-2" />
-            Previous
-          </button>
-
-          <div className="flex space-x-4">
-            {currentStep < totalSteps ? (
+          {error && (
+            <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
+              {error}
               <button
-                onClick={handleNext}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-purple-600 hover:bg-purple-700"
+                onClick={() => setError('')}
+                className="float-right font-bold"
               >
-                Next
-                <ArrowRightIcon className="h-4 w-4 ml-2" />
+                ×
               </button>
-            ) : (
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Saving Changes...' : 'Save Changes'}
-              </button>
-            )}
+            </div>
+          )}
+
+          {renderStepIndicator()}
+
+          <div className="bg-white rounded-lg shadow-sm border p-8">
+            {renderCurrentStep()}
+          </div>
+
+          <div className="flex justify-between mt-8">
+            <button
+              onClick={handlePrevious}
+              disabled={currentStep === 1}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ArrowLeftIcon className="h-4 w-4 mr-2" />
+              Previous
+            </button>
+
+            <div className="flex space-x-4">
+              {currentStep < totalSteps ? (
+                <button
+                  onClick={handleNext}
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-purple-600 hover:bg-purple-700"
+                >
+                  Next
+                  <ArrowRightIcon className="h-4 w-4 ml-2" />
+                </button>
+              ) : (
+                <button
+                  onClick={handleSubmit}
+                  disabled={loading || !canEdit}
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Saving Changes...' : 'Save Changes'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </ProtectedRoute>
   )
 } 

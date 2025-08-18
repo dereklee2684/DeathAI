@@ -1,14 +1,19 @@
+'use client'
+
 import Navigation from '@/components/Navigation'
 import Logo from '@/components/Logo'
 import { ArrowRightIcon, HeartIcon, UsersIcon, BookOpenIcon } from '@heroicons/react/24/outline'
+import Link from 'next/link'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function HomePage() {
+  
   return (
     <div className="min-h-screen bg-white">
       <Navigation />
       
       {/* Hero Section */}
-      <section className="relative py-20 overflow-hidden">
+      <section className="relative pt-8 pb-20 overflow-hidden">
         {/* Animated background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 opacity-10"></div>
         
@@ -28,8 +33,8 @@ export default function HomePage() {
         {/* Content */}
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <div className="flex justify-center mb-8">
-              <Logo size="lg" />
+            <div className="flex justify-center -ml-2">
+              <Logo size="7xl" useImage={true} showText={false} />
             </div>
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
               Preserve Stories,
@@ -40,12 +45,12 @@ export default function HomePage() {
               Share stories, achievements, and institutional memories that inspire future generations.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-colors">
+              <Link href="/auth/signup" className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-colors">
                 Get Started
-              </button>
-              <button className="border border-purple-600 text-purple-600 hover:bg-purple-50 px-8 py-3 rounded-lg text-lg font-semibold transition-colors">
+              </Link>
+              <Link href="/about" className="border border-purple-600 text-purple-600 hover:bg-purple-50 px-8 py-3 rounded-lg text-lg font-semibold transition-colors">
                 Learn More
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -268,10 +273,10 @@ export default function HomePage() {
           <p className="text-xl text-purple-100 mb-8 max-w-2xl mx-auto">
             Start creating beautiful alumni profiles today and preserve institutional stories forever.
           </p>
-          <button className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-3 rounded-lg text-lg font-semibold transition-colors inline-flex items-center">
+          <Link href="/auth/signup" className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-3 rounded-lg text-lg font-semibold transition-colors inline-flex items-center">
             Get Started Now
             <ArrowRightIcon className="ml-2 h-5 w-5" />
-          </button>
+          </Link>
         </div>
       </section>
     </div>

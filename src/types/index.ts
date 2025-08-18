@@ -8,6 +8,7 @@ export interface User {
   email: string
   display_name?: string
   user_role?: UserRole
+  university_id?: string
   created_at: string
   updated_at: string
 }
@@ -15,6 +16,7 @@ export interface User {
 export interface University {
   id: string
   name: string
+  code?: string
   logo_url?: string
   created_at: string
   updated_at: string
@@ -90,4 +92,29 @@ export interface Notification {
   message: string
   read: boolean
   created_at: string
+}
+
+export interface RoleRequest {
+  id: string
+  user_id: string
+  requested_role: string
+  university_id?: string
+  profile_id?: string
+  request_type: 'role_change' | 'alumni_verification' | 'new_profile'
+  existing_profile_name?: string
+  new_profile_name?: string
+  status: 'pending' | 'approved' | 'rejected'
+  reason?: string
+  created_at: string
+  updated_at: string
+  universities?: {
+    name: string
+  }
+  users?: {
+    email?: string
+    display_name?: string
+  }
+  profiles?: {
+    name: string
+  }
 } 

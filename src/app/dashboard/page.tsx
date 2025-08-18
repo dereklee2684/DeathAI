@@ -4,56 +4,54 @@ import { useAuth } from '@/contexts/AuthContext'
 import { isPlatformAdmin, isUniversityAdmin, isAlumni, canManageUniversities, canCreateProfiles } from '@/lib/auth'
 import { UserRole } from '@/types'
 import { PlusIcon, EyeIcon, Cog6ToothIcon, ShieldCheckIcon, UserGroupIcon, UsersIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline'
-import { fetchUserRole } from '@/lib/userRoles'
-import { useEffect, useState } from 'react'
 
 import Link from 'next/link'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import DashboardNavbar from '@/components/DashboardNavbar'
 
 export default function DashboardPage() {
-  const { user, refreshUser } = useAuth()
-  const [actualUserRole, setActualUserRole] = useState<string | null>(null)
-  const [loadingRole, setLoadingRole] = useState(false)
+  const { user } = useAuth()
 
-  useEffect(() => {
-    // Debug logging
-    console.log('Dashboard useEffect triggered:', {
-      userId: user?.id,
-      userRole: user?.user_role,
-      userEmail: user?.email
-    })
+  // Remove role checking logic - ProtectedRoute handles this
+  // useEffect(() => {
+  //   // Debug logging
+  //   console.log('Dashboard useEffect triggered:', {
+  //     userId: user?.id,
+  //     userRole: user?.user_role,
+  //     userEmail: user?.email
+  //   })
 
-    // Fetch the actual user role from database if user exists
-    if (user?.id) {
-      setLoadingRole(true)
-      fetchUserRole(user.id)
-        .then(role => {
-          console.log('Fetched role from database:', role)
-          if (role) {
-            setActualUserRole(role)
-            // Update the user context with the actual role
-            if (role !== user.user_role) {
-              console.log('Role mismatch, refreshing user context')
-              refreshUser()
-            }
-          }
-        })
-        .catch(error => {
-          console.error('Error fetching user role:', error)
-        })
-        .finally(() => {
-          setLoadingRole(false)
-        })
-    }
-  }, [user?.id, user?.user_role, user?.email, refreshUser])
+  //   // Fetch the actual user role from database if user exists
+  //   if (user?.id) {
+  //     setLoadingRole(true)
+  //     fetchUserRole(user.id)
+  //       .then(role => {
+  //         console.log('Fetched role from database:', role)
+  //         if (role) {
+  //           setActualUserRole(role)
+  //           // Update the user context with the actual role
+  //           if (role !== user.user_role) {
+  //             console.log('Role mismatch, refreshing user context')
+  //             refreshUser()
+  //             // Don't force reload - let the ProtectedRoute handle access control
+  //           }
+  //         }
+  //       })
+  //       .catch(error => {
+  //         console.error('Error fetching user role:', error)
+  //       })
+  //       .finally(() => {
+  //         setLoadingRole(false)
+  //       })
+  //   }
+  // }, [user?.id, user?.user_role, user?.email, refreshUser])
 
   if (!user) {
     return null // ProtectedRoute will handle the redirect
   }
 
-  // Use actual role from database if available, otherwise fall back to auth metadata
-  const effectiveRole = actualUserRole || user.user_role || 'viewer'
+  // Use role from auth context
+  const effectiveRole = user.user_role || 'viewer'
 
   return (
     <ProtectedRoute requireDashboardAccess>
@@ -71,9 +69,6 @@ export default function DashboardPage() {
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                 {effectiveRole.replace('_', ' ').toUpperCase()}
               </span>
-              {loadingRole && (
-                <span className="text-xs text-gray-500">(Updating role...)</span>
-              )}
             </div>
           </div>
 

@@ -48,7 +48,7 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <Link href="/" className="flex items-center">
-              <Logo size="md" />
+              <Logo size="3xl" useImage={true} showText={false} />
             </Link>
           </div>
 
@@ -56,6 +56,9 @@ export default function Navigation() {
             <div className="ml-10 flex items-baseline space-x-4">
               <Link href="/" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                 Home
+              </Link>
+              <Link href="/universities" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                Universities
               </Link>
               <Link href="/training" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                 Training
@@ -66,11 +69,31 @@ export default function Navigation() {
               <Link href="/contact" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                 Contact
               </Link>
-              {user && (
-                <Link href="/dashboard" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                  Dashboard
+                                    {user && user.user_role !== 'viewer' && user.user_role !== 'alumni' && (
+                        <Link href="/dashboard" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                          Dashboard
+                        </Link>
+                      )}
+              {user && user.user_role === 'viewer' && (
+                <Link href="/role-requests" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                  Role Requests
                 </Link>
               )}
+                                    {user && user.user_role === 'platform_admin' && (
+                        <Link href="/role-requests" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                          Manage Role Requests
+                        </Link>
+                      )}
+                      {user && user.user_role === 'university_admin' && (
+                        <Link href="/role-requests" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                          Manage Role Requests
+                        </Link>
+                      )}
+                      {user && user.user_role === 'alumni' && (
+                        <Link href="/alumni/profile" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                          Edit Profile
+                        </Link>
+                      )}
             </div>
           </div>
 
@@ -92,13 +115,15 @@ export default function Navigation() {
                 
                 {isDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-                    <Link 
-                      href="/dashboard" 
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      onClick={() => setIsDropdownOpen(false)}
-                    >
-                      Dashboard
-                    </Link>
+                    {user && user.user_role !== 'viewer' && user.user_role !== 'alumni' && (
+                      <Link 
+                        href="/dashboard" 
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        Dashboard
+                      </Link>
+                    )}
                     <Link 
                       href="/profile" 
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

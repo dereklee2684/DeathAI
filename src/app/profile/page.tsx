@@ -1,5 +1,6 @@
 import Navigation from '@/components/Navigation'
 import { PencilIcon } from '@heroicons/react/24/outline'
+import Link from 'next/link'
 
 export default function ProfilePage() {
   return (
@@ -11,10 +12,10 @@ export default function ProfilePage() {
           <div className="px-4 py-5 sm:p-6">
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
-              <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+              <Link href="/alumni/profile" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
                 <PencilIcon className="h-4 w-4 mr-2" />
                 Edit Profile
-              </button>
+              </Link>
             </div>
             
             <div className="space-y-6">

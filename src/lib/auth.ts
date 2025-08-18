@@ -1,13 +1,11 @@
 import { UserRole } from '@/types'
+import { User } from '@supabase/supabase-js'
 
 // Extended user type that matches what AuthContext provides
-interface ExtendedUser {
-  id: string
-  email: string
-  display_name?: string
+interface ExtendedUser extends User {
   user_role?: UserRole
-  created_at?: string
-  updated_at?: string
+  display_name?: string
+  university_id?: string
 }
 
 // Role checking utilities
@@ -45,6 +43,11 @@ export function canManageUniversityUsers(user: ExtendedUser | null): boolean {
 }
 
 export function canEditProfile(user: ExtendedUser | null, profileCreatedBy: string): boolean {
+  // Explicitly exclude viewers
+  if (user?.user_role === 'viewer') {
+    return false
+  }
+  
   return isPlatformAdmin(user) || 
          isUniversityAdmin(user) || 
          (isAlumni(user) && user?.id === profileCreatedBy)
@@ -66,7 +69,7 @@ export function canViewProfile(user: ExtendedUser | null, profileStatus: string,
   return false
 }
 
-export function canAccessDashboard(user: ExtendedUser | null): boolean {
+export async function canAccessDashboard(user: ExtendedUser | null): Promise<boolean> {
   // Debug logging
   console.log('canAccessDashboard check:', {
     user: user?.email,
@@ -76,14 +79,49 @@ export function canAccessDashboard(user: ExtendedUser | null): boolean {
     isAlumni: isAlumni(user)
   })
   
-  return isPlatformAdmin(user) || isUniversityAdmin(user) || isAlumni(user)
+  // If no user, deny access
+  if (!user?.id) {
+    return false
+  }
+  
+  // Fetch the actual role from database to avoid cached auth context issues
+  try {
+    const { fetchUserRole } = await import('./userRoles')
+    const actualRole = await fetchUserRole(user.id)
+    console.log('Actual role from database:', actualRole)
+    
+    // Explicitly exclude viewers
+    if (actualRole === 'viewer') {
+      console.log('Viewer role detected, denying dashboard access')
+      return false
+    }
+    
+    return actualRole === 'platform_admin' || actualRole === 'university_admin'
+  } catch (error) {
+    console.error('Error fetching actual role for dashboard access:', error)
+    // Fallback to cached role but still exclude viewers
+    if (user?.user_role === 'viewer') {
+      return false
+    }
+    return isPlatformAdmin(user) || isUniversityAdmin(user)
+  }
 }
 
 export function canCreateProfiles(user: ExtendedUser | null): boolean {
+  // Explicitly exclude viewers
+  if (user?.user_role === 'viewer') {
+    return false
+  }
+  
   return isPlatformAdmin(user) || isUniversityAdmin(user) || isAlumni(user)
 }
 
 export function canApproveProfiles(user: ExtendedUser | null): boolean {
+  // Explicitly exclude viewers
+  if (user?.user_role === 'viewer') {
+    return false
+  }
+  
   return isPlatformAdmin(user) || isUniversityAdmin(user)
 }
 

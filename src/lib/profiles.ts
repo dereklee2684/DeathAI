@@ -47,6 +47,10 @@ export interface CreateProfileData {
   university_id?: string
   timeline_events?: Omit<TimelineEvent, 'id' | 'profile_id' | 'created_at'>[]
   stories?: Omit<Story, 'id' | 'profile_id' | 'created_at'>[]
+  user?: {
+    id: string
+    user_role?: string
+  }
 }
 
 export interface UpdateProfileData {
@@ -103,6 +107,18 @@ export async function getProfile(id: string) {
 }
 
 export async function createProfile(profileData: CreateProfileData) {
+  // Determine initial status based on user role
+  let initialStatus: 'draft' | 'pending_review' | 'published' = 'draft'
+  
+  if (profileData.user?.user_role === 'platform_admin' || profileData.user?.user_role === 'university_admin') {
+    // Platform admins and university admins can publish directly
+    initialStatus = 'published'
+  } else if (profileData.user?.user_role === 'alumni') {
+    // Alumni profiles go to pending review
+    initialStatus = 'pending_review'
+  }
+  // Default is 'draft' for other roles
+
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .insert({
@@ -110,7 +126,8 @@ export async function createProfile(profileData: CreateProfileData) {
       birth_date: profileData.birth_date,
       passed_date: profileData.passed_date,
       university_id: profileData.university_id,
-      status: 'draft'
+      status: initialStatus,
+      created_by: profileData.user?.id
     })
     .select()
     .single()
@@ -122,18 +139,25 @@ export async function createProfile(profileData: CreateProfileData) {
 
   // Insert timeline events if provided
   if (profileData.timeline_events && profileData.timeline_events.length > 0) {
-    const timelineEvents = profileData.timeline_events.map(event => ({
-      ...event,
-      profile_id: profile.id
-    }))
+    // Filter out events with empty or invalid dates
+    const validTimelineEvents = profileData.timeline_events
+      .filter(event => event.start_date && event.start_date.trim() !== '')
+      .map(event => ({
+        ...event,
+        profile_id: profile.id,
+        // Ensure end_date is undefined if it's empty
+        end_date: event.end_date && event.end_date.trim() !== '' ? event.end_date : undefined
+      }))
 
-    const { error: timelineError } = await supabase
-      .from('timeline_events')
-      .insert(timelineEvents)
+    if (validTimelineEvents.length > 0) {
+      const { error: timelineError } = await supabase
+        .from('timeline_events')
+        .insert(validTimelineEvents)
 
-    if (timelineError) {
-      console.error('Error creating timeline events:', timelineError)
-      throw timelineError
+      if (timelineError) {
+        console.error('Error creating timeline events:', timelineError)
+        throw timelineError
+      }
     }
   }
 

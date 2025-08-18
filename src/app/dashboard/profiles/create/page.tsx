@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 import { 
   ArrowLeftIcon, 
   ArrowRightIcon, 
@@ -12,6 +13,7 @@ import {
   CalendarIcon
 } from '@heroicons/react/24/outline'
 import { createProfile, uploadProfilePhoto, uploadCoverPhoto } from '@/lib/profiles'
+import { getUniversities } from '@/lib/universities'
 
 interface TimelineEventData {
   id: string
@@ -32,6 +34,7 @@ interface StoryData {
 interface ProfileData {
   name: string
   birthDate: string
+  universityId: string | undefined
   coverPhoto?: File
   profilePhoto?: File
   timeline: TimelineEventData[]
@@ -53,17 +56,21 @@ const storyQuestions = [
 
 export default function CreateProfilePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const { user } = useAuth()
   const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [profileData, setProfileData] = useState<ProfileData>({
     name: '',
     birthDate: '',
+    universityId: '',
     timeline: [],
     stories: []
   })
+  const [universities, setUniversities] = useState<Array<{ id: string; name: string }>>([])
 
-  // Load cached data on component mount
+  // Load cached data on component mount and check for university_id parameter
   useEffect(() => {
     const cached = localStorage.getItem('profileCreationData')
     if (cached) {
@@ -74,7 +81,44 @@ export default function CreateProfilePage() {
         console.error('Error loading cached data:', err)
       }
     }
-  }, [])
+    
+    // Check for university_id in URL parameters
+    const universityId = searchParams.get('university_id')
+    if (universityId) {
+      setProfileData(prev => ({
+        ...prev,
+        universityId: universityId
+      }))
+    }
+  }, [searchParams])
+
+  // Load universities
+  useEffect(() => {
+    const loadUniversities = async () => {
+      try {
+        const data = await getUniversities()
+        
+        // For university admins, only show their assigned university
+        if (user?.user_role === 'university_admin' && user?.university_id) {
+          const filteredData = data.filter(university => university.id === user.university_id)
+          setUniversities(filteredData)
+          
+          // Automatically set the university_id for university admins
+          if (filteredData.length > 0) {
+            setProfileData(prev => ({
+              ...prev,
+              universityId: user.university_id
+            }))
+          }
+        } else {
+          setUniversities(data)
+        }
+      } catch (err) {
+        console.error('Error loading universities:', err)
+      }
+    }
+    loadUniversities()
+  }, [user])
 
   // Auto-save to localStorage
   useEffect(() => {
@@ -170,19 +214,32 @@ export default function CreateProfilePage() {
       return
     }
 
+    if (!profileData.universityId) {
+      setError('University selection is required.')
+      return
+    }
+
+    // Validate that university admins can only create profiles for their assigned university
+    if (user?.user_role === 'university_admin' && user?.university_id && profileData.universityId !== user.university_id) {
+      setError('You can only create profiles for your assigned university.')
+      return
+    }
+
     setLoading(true)
     setError('')
 
     try {
-      // Prepare timeline events for database
-      const timelineEvents = profileData.timeline.map(event => ({
-        title: event.title,
-        description: event.description,
-        event_type: event.type,
-        start_date: event.startDate,
-        end_date: event.endDate || undefined,
-        institution: event.institution
-      }))
+      // Prepare timeline events for database - filter out events with empty dates
+      const timelineEvents = profileData.timeline
+        .filter(event => event.startDate && event.startDate.trim() !== '')
+        .map(event => ({
+          title: event.title,
+          description: event.description,
+          event_type: event.type,
+          start_date: event.startDate,
+          end_date: event.endDate && event.endDate.trim() !== '' ? event.endDate : undefined,
+          institution: event.institution
+        }))
 
       // Prepare stories for database
       const stories = profileData.stories.map(story => ({
@@ -193,9 +250,14 @@ export default function CreateProfilePage() {
       // Create the profile
       const profile = await createProfile({
         name: profileData.name,
-        birth_date: profileData.birthDate || undefined,
+        birth_date: profileData.birthDate && profileData.birthDate.trim() !== '' ? profileData.birthDate : undefined,
+        university_id: profileData.universityId || undefined,
         timeline_events: timelineEvents,
-        stories: stories
+        stories: stories,
+        user: {
+          id: user?.id || '',
+          user_role: user?.user_role
+        }
       })
 
       // Upload photos if provided
@@ -209,6 +271,16 @@ export default function CreateProfilePage() {
 
       // Clear cache after successful submission
       clearCache()
+      
+      // Show appropriate success message based on user role
+      const isAdmin = user?.user_role === 'platform_admin' || user?.user_role === 'university_admin'
+      const message = isAdmin 
+        ? 'Profile created and published successfully!' 
+        : 'Profile created successfully! It will be reviewed before publishing.'
+      
+      // You could add a toast notification here if you have a toast system
+      console.log(message)
+      
       router.push('/dashboard/profiles')
     } catch (err) {
       console.error('Error creating profile:', err)
@@ -290,6 +362,32 @@ export default function CreateProfilePage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-black placeholder-gray-500"
             />
           </div>
+        </div>
+        
+        <div className="mt-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            University *
+          </label>
+          <select
+            value={profileData.universityId}
+            onChange={(e) => setProfileData(prev => ({ ...prev, universityId: e.target.value }))}
+            disabled={user?.user_role === 'university_admin'}
+            className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-black ${
+              user?.user_role === 'university_admin' ? 'bg-gray-100 cursor-not-allowed' : ''
+            }`}
+          >
+            <option value="">Select a university</option>
+            {universities.map((university) => (
+              <option key={university.id} value={university.id}>
+                {university.name}
+              </option>
+            ))}
+          </select>
+          {user?.user_role === 'university_admin' && (
+            <p className="mt-1 text-sm text-gray-500">
+              You can only create profiles for your assigned university.
+            </p>
+          )}
         </div>
       </div>
 
@@ -722,7 +820,11 @@ export default function CreateProfilePage() {
                 disabled={loading}
                 className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Creating Profile...' : 'Submit for Review'}
+                {loading ? 'Creating Profile...' : 
+                  (user?.user_role === 'platform_admin' || user?.user_role === 'university_admin') 
+                    ? 'Publish' 
+                    : 'Submit for Review'
+                }
               </button>
             )}
           </div>

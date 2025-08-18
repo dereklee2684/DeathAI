@@ -9,10 +9,12 @@ import {
   ArchiveBoxIcon,
   CheckIcon,
   XMarkIcon,
-  EyeIcon,
-  DocumentTextIcon
+  EyeIcon
 } from '@heroicons/react/24/outline'
 import { getProfile, getTimelineEvents, getStories, updateProfile } from '@/lib/profiles'
+import ProtectedRoute from '@/components/ProtectedRoute'
+import { useAuth } from '@/contexts/AuthContext'
+import { canEditProfile, canApproveProfiles } from '@/lib/auth'
 
 interface TimelineEvent {
   id: string
@@ -37,6 +39,8 @@ interface Profile {
   status: 'draft' | 'pending_review' | 'published' | 'archived'
   profile_photo_url?: string
   cover_photo_url?: string
+  university_id: string
+  created_by: string
   created_at: string
   updated_at: string
   universities?: {
@@ -64,6 +68,7 @@ const statusLabels = {
 export default function ProfileViewPage() {
   const router = useRouter()
   const params = useParams()
+  const { user } = useAuth()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([])
   const [stories, setStories] = useState<Story[]>([])
@@ -72,6 +77,16 @@ export default function ProfileViewPage() {
   const [showReviewModal, setShowReviewModal] = useState(false)
   const [reviewAction, setReviewAction] = useState<'approve' | 'reject' | null>(null)
   const [updating, setUpdating] = useState(false)
+
+  // Debug logging
+  useEffect(() => {
+    console.log('ProfileViewPage - User role debug:', {
+      userEmail: user?.email,
+      userRole: user?.user_role,
+      canEdit: canEditProfile(user, profile?.created_by || ''),
+      canApprove: canApproveProfiles(user)
+    })
+  }, [user, profile?.created_by])
 
   useEffect(() => {
     if (params.id) {
@@ -201,8 +216,9 @@ export default function ProfileViewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <ProtectedRoute requireDashboardAccess>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <button
@@ -225,7 +241,7 @@ export default function ProfileViewPage() {
             </div>
             
             <div className="flex space-x-3">
-              {profile.status === 'pending_review' && (
+              {profile.status === 'pending_review' && canApproveProfiles(user) && (
                 <>
                   <button
                     onClick={() => handleReview('approve')}
@@ -246,13 +262,15 @@ export default function ProfileViewPage() {
                 </>
               )}
               
-              <button
-                onClick={handleEdit}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-              >
-                <PencilIcon className="h-4 w-4 mr-2" />
-                Edit
-              </button>
+              {canEditProfile(user, profile?.created_by || '') && user?.user_role !== 'viewer' && (
+                <button
+                  onClick={handleEdit}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  <PencilIcon className="h-4 w-4 mr-2" />
+                  Edit
+                </button>
+              )}
               
               <button
                 onClick={handleViewPublic}
@@ -262,7 +280,7 @@ export default function ProfileViewPage() {
                 View Public
               </button>
               
-              {profile.status !== 'archived' && (
+              {profile.status !== 'archived' && canEditProfile(user, profile?.created_by || '') && user?.user_role !== 'viewer' && (
                 <button
                   onClick={handleArchive}
                   disabled={updating}
@@ -404,13 +422,15 @@ export default function ProfileViewPage() {
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
               <div className="space-y-3">
-                <button
-                  onClick={handleEdit}
-                  className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  <PencilIcon className="h-4 w-4 mr-2" />
-                  Edit Profile
-                </button>
+                {canEditProfile(user, profile?.created_by || '') && user?.user_role !== 'viewer' && (
+                  <button
+                    onClick={handleEdit}
+                    className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                  >
+                    <PencilIcon className="h-4 w-4 mr-2" />
+                    Edit Profile
+                  </button>
+                )}
                 <button
                   onClick={handleViewPublic}
                   className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700"
@@ -461,6 +481,7 @@ export default function ProfileViewPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </ProtectedRoute>
   )
 } 

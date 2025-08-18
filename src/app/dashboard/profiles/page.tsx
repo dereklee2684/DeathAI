@@ -21,6 +21,7 @@ interface Profile {
   name: string
   status: 'draft' | 'pending_review' | 'published' | 'archived'
   profile_photo_url?: string
+  university_id?: string
   created_at: string
   updated_at: string
   created_by: string
@@ -64,13 +65,17 @@ export default function ProfilesPage() {
       
       // Filter profiles based on user role
       let filteredData = data
-      if (isAlumni({ ...user, email: user?.email || '', id: user?.id || '' })) {
+      if (isAlumni(user)) {
         // Alumni can only see their own profiles
         filteredData = data.filter((profile: Profile) => profile.created_by === user?.id)
-      } else if (isUniversityAdmin({ ...user, email: user?.email || '', id: user?.id || '' })) {
-        // University admins can see profiles from their university
-        // Note: This would need to be enhanced with university-specific filtering
-        filteredData = data
+      } else if (isUniversityAdmin(user)) {
+        // University admins can only see profiles from their assigned university
+        if (user?.university_id) {
+          filteredData = data.filter((profile: Profile) => profile.university_id === user.university_id)
+        } else {
+          // If no university_id, show no profiles
+          filteredData = []
+        }
       }
       // Platform admins can see all profiles
       
@@ -108,7 +113,7 @@ export default function ProfilesPage() {
     router.push(`/dashboard/profiles/${id}/edit`)
   }
 
-  const handleArchiveProfile = async (_id: string) => {
+  const handleArchiveProfile = async () => {
     try {
       // await updateProfile(id, { status: 'archived' }) // This line was removed as per the new_code
       // Refresh the profiles list
@@ -142,16 +147,16 @@ export default function ProfilesPage() {
             <div className="flex justify-between items-center">
               <div>
                                 <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-                  {isAlumni({ ...user, email: user?.email || '', id: user?.id || '' }) ? 'My Profiles' : 'Alumni Profiles'}
+                  {isAlumni(user) ? 'My Profiles' : 'Alumni Profiles'}
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
-                  {isAlumni({ ...user, email: user?.email || '', id: user?.id || '' })
+                  {isAlumni(user)
                     ? 'Manage your alumni profiles' 
                     : 'Manage and review alumni profiles'
                   }
                 </p>
               </div>
-              {canCreateProfiles({ ...user, email: user?.email || '', id: user?.id || '' }) && (
+              {canCreateProfiles(user) && (
                 <button
                   onClick={handleCreateProfile}
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
@@ -164,7 +169,7 @@ export default function ProfilesPage() {
           </div>
 
           {/* Filters */}
-          <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className={`mb-6 grid grid-cols-1 md:grid-cols-${isUniversityAdmin({ ...user, email: user?.email || '', id: user?.id || '' }) ? '2' : '3'} gap-4`}>
             <div>
               <label htmlFor="search" className="block text-sm font-medium text-gray-700">
                 Search
@@ -175,7 +180,7 @@ export default function ProfilesPage() {
                   id="search"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-purple-500 focus:border-purple-500 sm:text-sm text-gray-900"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-600 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-purple-500 focus:border-purple-500 sm:text-sm text-gray-900"
                   placeholder="Search profiles..."
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -202,22 +207,24 @@ export default function ProfilesPage() {
               </select>
             </div>
 
-            <div>
-              <label htmlFor="university" className="block text-sm font-medium text-gray-700">
-                University
-              </label>
-              <select
-                id="university"
-                value={universityFilter}
-                onChange={(e) => setUniversityFilter(e.target.value)}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md text-gray-900"
-              >
-                <option value="all">All Universities</option>
-                {getUniversities().map(university => (
-                  <option key={university} value={university}>{university}</option>
-                ))}
-              </select>
-            </div>
+            {!isUniversityAdmin({ ...user, email: user?.email || '', id: user?.id || '' }) && (
+              <div>
+                <label htmlFor="university" className="block text-sm font-medium text-gray-700">
+                  University
+                </label>
+                <select
+                  id="university"
+                  value={universityFilter}
+                  onChange={(e) => setUniversityFilter(e.target.value)}
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md text-gray-900"
+                >
+                  <option value="all">All Universities</option>
+                  {getUniversities().map(university => (
+                    <option key={university} value={university}>{university}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {error && (

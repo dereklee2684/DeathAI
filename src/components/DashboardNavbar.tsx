@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
@@ -10,6 +10,7 @@ import {
   HomeIcon, 
   BellIcon
 } from '@heroicons/react/24/outline'
+import { fetchUserRole } from '@/lib/userRoles'
 
 export default function DashboardNavbar() {
   const { user, signOut } = useAuth()
@@ -17,6 +18,7 @@ export default function DashboardNavbar() {
   const pathname = usePathname()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
+  const [actualUserRole, setActualUserRole] = useState<string | null>(null)
 
   const getInitials = (name: string) => {
     return name.split(' ').map(word => word[0]).join('').toUpperCase()
@@ -45,6 +47,21 @@ export default function DashboardNavbar() {
     }
   }
 
+  // Fetch actual user role from database
+  useEffect(() => {
+    if (user?.id) {
+      fetchUserRole(user.id)
+        .then(role => {
+          if (role) {
+            setActualUserRole(role)
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching user role in navbar:', error)
+        })
+    }
+  }, [user?.id])
+
   // Get breadcrumb based on current path
   const getBreadcrumb = () => {
     if (pathname === '/dashboard') return 'Dashboard'
@@ -63,7 +80,7 @@ export default function DashboardNavbar() {
           {/* Left side - Logo and Breadcrumb */}
           <div className="flex items-center space-x-6">
             <Link href="/" className="flex items-center">
-              <Logo size="md" />
+              <Logo size="3xl" useImage={true} showText={false} />
             </Link>
             
             {/* Breadcrumb */}
@@ -103,6 +120,7 @@ export default function DashboardNavbar() {
               >
                 Profiles
               </Link>
+
               {user?.user_role === 'platform_admin' && (
                 <>
                   <Link 
@@ -168,7 +186,7 @@ export default function DashboardNavbar() {
                     <p className="text-sm font-medium text-gray-900">{getDisplayName()}</p>
                     <p className="text-xs text-gray-500">{user?.email}</p>
                     <p className="text-xs text-purple-600 font-medium mt-1">
-                      {user?.user_role?.replace('_', ' ').toUpperCase()}
+                      {(actualUserRole || user?.user_role || 'viewer').replace('_', ' ').toUpperCase()}
                     </p>
                   </div>
                   

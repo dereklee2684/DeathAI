@@ -8,6 +8,7 @@ import { UserRole } from '@/types'
 interface ExtendedUser extends User {
   user_role?: UserRole
   display_name?: string
+  university_id?: string
 }
 
 interface AuthContextType {
@@ -26,25 +27,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
-  const updateUserWithBasicInfo = (authUser: User | null) => {
+  const updateUserWithBasicInfo = async (authUser: User | null) => {
     if (!authUser) {
       setUser(null)
       setLoading(false)
       return
     }
 
-    // Set basic user info immediately without database calls
+    // Set basic user info immediately
     const displayName = authUser.user_metadata?.display_name || authUser.email
-    const userRole = authUser.user_metadata?.user_role || 'university_admin' // Default to university_admin
+    const cachedUserRole = authUser.user_metadata?.user_role || 'viewer' // Default to viewer
 
     const extendedUser: ExtendedUser = {
       ...authUser,
-      user_role: userRole as UserRole,
+      user_role: cachedUserRole as UserRole,
       display_name: displayName
     }
 
     setUser(extendedUser)
     setLoading(false)
+
+    // Fetch actual role and university_id from database to ensure accuracy (non-blocking with timeout)
+    const fetchUserDataWithTimeout = async () => {
+      try {
+        const { fetchUserRole } = await import('@/lib/userRoles')
+        const actualRole = await Promise.race([
+          fetchUserRole(authUser.id),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Role fetch timeout')), 5000)
+          )
+        ]) as string
+        
+        // Fetch university_id for university admins
+        let universityId: string | undefined
+        if (actualRole === 'university_admin') {
+          const { data: userData } = await supabase
+            .from('users')
+            .select('university_id')
+            .eq('id', authUser.id)
+            .single()
+          universityId = userData?.university_id
+        }
+        
+        if (actualRole && (actualRole !== cachedUserRole || universityId)) {
+          console.log('Updating user data from database:', { cached: cachedUserRole, actual: actualRole, universityId })
+          setUser(prevUser => prevUser ? {
+            ...prevUser,
+            user_role: actualRole as UserRole,
+            university_id: universityId
+          } : null)
+        }
+      } catch (error) {
+        console.error('Error fetching actual user data:', error)
+        // Don't block the UI if data fetching fails - user can still use the app with cached data
+      }
+    }
+
+    // Start data fetching in background
+    fetchUserDataWithTimeout()
   }
 
   useEffect(() => {
@@ -55,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data: { session } } = await supabase.auth.getSession()
         if (mounted) {
-          updateUserWithBasicInfo(session?.user ?? null)
+          await updateUserWithBasicInfo(session?.user ?? null)
         }
       } catch (error) {
         console.error('Error getting initial session:', error)
@@ -72,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event: string, session: Session | null) => {
         if (mounted) {
           console.log('Auth state change:', event, session?.user?.email)
-          updateUserWithBasicInfo(session?.user ?? null)
+          await updateUserWithBasicInfo(session?.user ?? null)
         }
       }
     )
@@ -141,10 +181,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const refreshUser = async () => {
-    // For now, just refresh the session
+    // Refresh the session and update user info
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      updateUserWithBasicInfo(session?.user ?? null)
+      await updateUserWithBasicInfo(session?.user ?? null)
     } catch (error) {
       console.error('Error refreshing user:', error)
     }
