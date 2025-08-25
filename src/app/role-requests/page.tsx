@@ -15,7 +15,7 @@ export default function RoleRequestsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [selectedUniversity, setSelectedUniversity] = useState('')
-  const [requestType, setRequestType] = useState<'role_change' | 'alumni_verification' | 'new_profile'>('role_change')
+  const [requestType, setRequestType] = useState<'role_change' | 'alumni_verification' | 'new_profile' | 'organizations'>('role_change')
   const [selectedProfile, setSelectedProfile] = useState('')
   const [newProfileName, setNewProfileName] = useState('')
 
@@ -209,7 +209,7 @@ export default function RoleRequestsPage() {
       const requestData: {
         user_id: string | undefined
         university_id: string
-        request_type: 'role_change' | 'alumni_verification' | 'new_profile'
+        request_type: 'role_change' | 'alumni_verification' | 'new_profile' | 'organizations'
         status: 'pending'
         requested_role?: string
         profile_id?: string
@@ -434,7 +434,7 @@ export default function RoleRequestsPage() {
                   id="requestType"
                   value={requestType}
                   onChange={(e) => {
-                    setRequestType(e.target.value as 'role_change' | 'alumni_verification' | 'new_profile')
+                    setRequestType(e.target.value as 'role_change' | 'alumni_verification' | 'new_profile' | 'organizations')
                     setSelectedProfile('')
                     setNewProfileName('')
                   }}
@@ -444,6 +444,7 @@ export default function RoleRequestsPage() {
                   <option value="role_change">Request University Admin Role</option>
                   <option value="alumni_verification">Claim Existing Alumni Profile</option>
                   <option value="new_profile">Request New Alumni Profile</option>
+                  <option value="organizations">Organizations</option>
                 </select>
               </div>
 
