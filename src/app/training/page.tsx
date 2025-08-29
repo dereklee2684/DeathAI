@@ -12,7 +12,7 @@ export default function TrainingPage() {
             Training Resources
           </h1>
           <p className="mt-2 text-lg text-gray-600">
-            Access training materials and resources for managing memorial profiles
+            Access training materials and resources for managing alumni profiles
           </p>
         </div>
 

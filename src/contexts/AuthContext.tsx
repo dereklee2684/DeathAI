@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { fetchUserRole } = await import('@/lib/userRoles')
         const actualRole = await Promise.race([
           fetchUserRole(authUser.id),
-          new Promise((_, reject) => 
+          new Promise<string>((_, reject) => 
             setTimeout(() => reject(new Error('Role fetch timeout')), 5000)
           )
         ]) as string

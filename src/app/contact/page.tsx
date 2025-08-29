@@ -84,20 +84,20 @@ export default function ContactPage() {
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    How do I create a memorial profile?
+                    How do I create an alumni profile?
                   </h3>
                   <p className="text-gray-600">
                     Start by signing up for an account and then use our guided process to create 
-                    a beautiful memorial profile with photos, stories, and memories.
+                                          a beautiful alumni profile with photos, stories, and memories.
                   </p>
                 </div>
 
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Can I share the memorial with family and friends?
+                    Can I share the alumni profile with family and friends?
                   </h3>
                   <p className="text-gray-600">
-                    Yes! You can share your memorial profile with anyone you choose, allowing 
+                    Yes! You can share your alumni profile with anyone you choose, allowing 
                     them to view and contribute their own memories and stories.
                   </p>
                 </div>
@@ -108,7 +108,7 @@ export default function ContactPage() {
                   </h3>
                   <p className="text-gray-600">
                     Absolutely. We take privacy and security very seriously. Your data is encrypted 
-                    and you have full control over who can access your memorial profiles.
+                    and you have full control over who can access your alumni profiles.
                   </p>
                 </div>
 
@@ -117,7 +117,7 @@ export default function ContactPage() {
                     How much does it cost?
                   </h3>
                   <p className="text-gray-600">
-                    We offer both free and premium plans. Basic memorial profiles are free, 
+                    We offer both free and premium plans. Basic alumni profiles are free, 
                     while premium features are available for a small monthly fee.
                   </p>
                 </div>

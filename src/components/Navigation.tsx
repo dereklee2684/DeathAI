@@ -60,6 +60,9 @@ export default function Navigation() {
               <Link href="/universities" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                 Universities
               </Link>
+              <Link href="/organizations" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                Organizations
+              </Link>
               <Link href="/training" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                 Training
               </Link>

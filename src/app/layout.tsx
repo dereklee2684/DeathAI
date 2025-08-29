@@ -7,8 +7,13 @@ import Footer from '@/components/Footer'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Storiats - Alumni Memorial Platform',
-  description: 'Preserve and share the memories of university alumni',
+  title: 'Storiats - Alumni Community Platform',
+  description: 'Storiats is the community OS that turns scattered alumni lists into living networks',
+            icons: {
+            icon: '/transparent.png',
+            shortcut: '/transparent.png',
+            apple: '/transparent.png',
+          },
 }
 
 export default function RootLayout({
@@ -18,6 +23,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/transparent.png" type="image/png" />
+        <link rel="shortcut icon" href="/transparent.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/transparent.png" />
+      </head>
       <body className={inter.className}>
         <AuthProvider>
           <div className="flex flex-col min-h-screen">

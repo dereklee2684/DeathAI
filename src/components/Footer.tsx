@@ -13,8 +13,7 @@ export default function Footer() {
               </span>
             </div>
             <p className="text-gray-300 mb-4 max-w-md">
-              Preserve and celebrate university alumni through beautiful digital profiles. 
-              Share stories, achievements, and institutional memories that inspire future generations.
+              Storiats is the community OS that turns scattered alumni lists into living networks.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-white transition-colors">

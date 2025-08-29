@@ -104,6 +104,26 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* Story Section */}
+      <section className="py-20 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 relative overflow-hidden">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-20" style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(156, 146, 172, 0.08) 1px, transparent 0)`,
+          backgroundSize: '25px 25px'
+        }}></div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+              What&apos;s our Story?
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              Storiats began with a simple realization: alumni and member networks were stuck on outdated lists, scattered spreadsheets, and ineffective tools. Communities wanted to stay engaged, but the systems meant to support them weren&apos;t keeping up.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Values Section */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -116,15 +136,14 @@ export default function AboutPage() {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white rounded-xl p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <HeartIcon className="h-8 w-8 text-purple-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4 text-center">Respect</h3>
               <p className="text-gray-600 text-center leading-relaxed">
-                We approach every alumni story with the utmost care and attention, 
-                understanding the importance of preserving institutional history and personal achievements.
+                We treat every member&apos;s voice with care and authenticity.
               </p>
             </div>
             
@@ -134,19 +153,7 @@ export default function AboutPage() {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4 text-center">Connection</h3>
               <p className="text-gray-600 text-center leading-relaxed">
-                We believe in the power of shared stories to connect current students 
-                with alumni across time, creating meaningful bonds through shared institutional experiences.
-              </p>
-            </div>
-            
-            <div className="bg-white rounded-xl p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <BookOpenIcon className="h-8 w-8 text-purple-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4 text-center">Preservation</h3>
-              <p className="text-gray-600 text-center leading-relaxed">
-                We&apos;re committed to preserving precious alumni stories and achievements for 
-                future generations, ensuring that important institutional legacies live on.
+                We believe strong communities come from authentic relationships and shared experiences.
               </p>
             </div>
             
@@ -156,99 +163,8 @@ export default function AboutPage() {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4 text-center">Community</h3>
               <p className="text-gray-600 text-center leading-relaxed">
-                We foster supportive university communities where students, alumni, and faculty 
-                can come together to celebrate achievements and inspire future generations.
+                We foster spaces where alumni, members, and organizations engage meaningfully.
               </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Story Section */}
-      <section className="py-20 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 relative overflow-hidden">
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-20" style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(156, 146, 172, 0.08) 1px, transparent 0)`,
-          backgroundSize: '25px 25px'
-        }}></div>
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left side - Story content */}
-            <div className="space-y-8">
-              <div>
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-                  Our Story
-                </h2>
-                <div className="w-24 h-1 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full mb-8"></div>
-              </div>
-              
-              <div className="space-y-6">
-                <div className="bg-white/70 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/20">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-white font-bold text-lg">1</span>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">The Beginning</h3>
-                      <p className="text-gray-700 leading-relaxed">
-                        Storiats was born from a simple yet powerful idea: that every alumni has a story worth telling, 
-                        and every story deserves to be preserved.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-white/70 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/20">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-white font-bold text-lg">2</span>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">The Mission</h3>
-                      <p className="text-gray-700 leading-relaxed">
-                        We understand the profound impact that institutional memory and alumni connections 
-                        can have on university communities.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-white/70 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/20">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-white font-bold text-lg">3</span>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">The Solution</h3>
-                      <p className="text-gray-700 leading-relaxed">
-                        Our platform was designed with care and attention to detail, providing universities 
-                        with a beautiful way to celebrate and preserve alumni achievements.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Right side - Visual element */}
-            <div className="relative">
-              <div className="bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-600 rounded-2xl p-8 text-white shadow-2xl">
-                <div className="text-center space-y-4">
-                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto">
-                    <BookOpenIcon className="h-10 w-10 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold">Preserving Legacies</h3>
-                  <p className="text-purple-100 leading-relaxed">
-                    Through technology, we&apos;re helping to ensure that precious institutional stories 
-                    and connections are never lost.
-                  </p>
-                </div>
-              </div>
-              
-              {/* Floating elements */}
-              <div className="absolute -top-4 -right-4 w-8 h-8 bg-yellow-400 rounded-full opacity-80 animate-pulse"></div>
-              <div className="absolute -bottom-4 -left-4 w-6 h-6 bg-pink-400 rounded-full opacity-60 animate-bounce"></div>
             </div>
           </div>
         </div>

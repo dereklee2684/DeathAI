@@ -2,7 +2,7 @@
 
 import Navigation from '@/components/Navigation'
 import Logo from '@/components/Logo'
-import { ArrowRightIcon, HeartIcon, UsersIcon, BookOpenIcon } from '@heroicons/react/24/outline'
+import { ArrowRightIcon, HeartIcon, UsersIcon, BookOpenIcon, LinkIcon, ChatBubbleLeftRightIcon, ChartBarIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -37,12 +37,13 @@ export default function HomePage() {
               <Logo size="7xl" useImage={true} showText={false} />
             </div>
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              Preserve Stories,
-              <span className="text-purple-600"> Share Legacies</span>
+              <div className="pl-4">Connect Your Community,</div>
+              <div className="pr-4">
+                <span className="text-purple-600">Strengthen Your Network</span>
+              </div>
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Celebrate and preserve university alumni through beautiful digital profiles. 
-              Share stories, achievements, and institutional memories that inspire future generations.
+              Storiats transforms outdated alumni directories into engaged networks, helping organizations strengthen ties and create lasting value with their alumni.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/auth/signup" className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-colors">
@@ -73,43 +74,45 @@ export default function HomePage() {
               Why Choose Storiats?
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Our platform provides everything you need to create meaningful alumni profiles
+              Build stronger alumni and member communities, all in one place
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <div className="bg-gradient-to-br from-gray-500 to-gray-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <LinkIcon className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 text-center">Reconnect & Unify</h3>
+              <p className="text-gray-600 text-center leading-relaxed">
+                Transform scattered spreadsheets and outdated directories into a single, unified platform with profiles, groups, and events that bring members back together
+              </p>
+            </div>
+            
+            <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
               <div className="bg-gradient-to-br from-purple-500 to-pink-500 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <HeartIcon className="h-8 w-8 text-white" />
+                <ChatBubbleLeftRightIcon className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4 text-center">Preserve Stories</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 text-center">Keep Voices Alive</h3>
               <p className="text-gray-600 text-center leading-relaxed">
-                Create beautiful alumni profiles that preserve and celebrate institutional stories and achievements
+                Enhance member profiles with AI chatbots that reflect their voices, stories, and experiences — creating more natural ways for communities to interact and engage
               </p>
             </div>
             
             <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <div className="bg-gradient-to-br from-blue-500 to-cyan-500 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <UsersIcon className="h-8 w-8 text-white" />
+              <div className="bg-gradient-to-br from-green-500 to-purple-500 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <ChartBarIcon className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4 text-center">Share Legacies</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 text-center">Measure What Matters</h3>
               <p className="text-gray-600 text-center leading-relaxed">
-                Collect and share stories, achievements, and experiences from alumni, faculty, and community members
-              </p>
-            </div>
-            
-            <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <div className="bg-gradient-to-br from-indigo-500 to-purple-500 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <BookOpenIcon className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4 text-center">Inspire Futures</h3>
-              <p className="text-gray-600 text-center leading-relaxed">
-                Ensure that important institutional stories and achievements inspire future generations
+                Simplify admin work with clean data and integrations, while engagement analytics show clear impact — from return visits to event participation
               </p>
             </div>
           </div>
         </div>
       </section>
+
+
 
       {/* How It Works Section */}
       <section className="py-20 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 relative overflow-hidden">
@@ -129,7 +132,7 @@ export default function HomePage() {
               How It Works
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Simple steps to create a beautiful alumni profile
+              How Storiats Rebuilds the Sense of Community
             </p>
           </div>
           
@@ -179,9 +182,9 @@ export default function HomePage() {
                         <span className="text-white font-bold text-lg">2</span>
                       </div>
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-3 text-center">Add Stories</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-3 text-center">Enrich with Stories & Voices</h3>
                     <p className="text-gray-600 text-center leading-relaxed">
-                      Add timeline events, stories, and achievements to build a complete picture
+                      Enrich profiles with photos, videos, and personal stories, and create AI chatbots that carry alumni voices forward.
                     </p>
                   </div>
                 </div>
@@ -196,9 +199,9 @@ export default function HomePage() {
                         <span className="text-white font-bold text-lg">3</span>
                       </div>
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-3 text-center">Share & Inspire</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-3 text-center">Engage & Reconnect</h3>
                     <p className="text-gray-600 text-center leading-relaxed">
-                      Share the profile with the university community to inspire current students
+                    Members and organizations interact with these AI-powered alumni, sparking conversations, sharing inspiration, and building stronger connections across generations.
                     </p>
                   </div>
                 </div>
@@ -219,9 +222,9 @@ export default function HomePage() {
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              What Universities Say
-            </h2>
+                          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                What Our Partners Say
+              </h2>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -268,10 +271,10 @@ export default function HomePage() {
       <section className="py-20 bg-purple-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Ready to Preserve Alumni Stories?
+            Ready to Activate Your Alumni Network?
           </h2>
           <p className="text-xl text-purple-100 mb-8 max-w-2xl mx-auto">
-            Start creating beautiful alumni profiles today and preserve institutional stories forever.
+          Launch Storiats to transform alumni records into living, interactive networks. Keep voices alive, preserve stories, and make connections that last.
           </p>
           <Link href="/auth/signup" className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-3 rounded-lg text-lg font-semibold transition-colors inline-flex items-center">
             Get Started Now
